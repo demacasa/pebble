@@ -43,6 +43,11 @@
           $TMPDIR/bin/test_run_state
           touch $out
         '';
+        demarun-js-tests = pkgs.runCommand "demarun-js-tests" {} ''
+          cd ${self}/apps/demarun
+          ${pkgs.nodejs}/bin/node --test 'test/**/*.test.js'
+          touch $out
+        '';
       };
     });
 }
