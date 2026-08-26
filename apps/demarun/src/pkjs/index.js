@@ -42,7 +42,7 @@ function send(nowMs) {
     function () {},
     function (e) {
       console.log("send failed: " + JSON.stringify(e));
-    },
+    }
   );
 }
 
