@@ -79,4 +79,4 @@ RunTracker.prototype.paceSecondsPerMile = function () {
   return spm >= 3600 ? 0 : spm;
 };
 
-module.exports = { haversineM, RunTracker };
+module.exports = { haversineM: haversineM, RunTracker: RunTracker };
