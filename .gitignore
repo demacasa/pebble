@@ -1,0 +1,6 @@
+build/
+apps/*/build/
+.direnv/
+result
+result-*
+node_modules/
