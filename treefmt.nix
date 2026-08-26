@@ -10,5 +10,6 @@
     ".envrc"
     ".gitignore"
     ".clang-format"
+    "flake.lock"
   ];
 }
