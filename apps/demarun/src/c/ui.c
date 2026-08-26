@@ -19,7 +19,7 @@ static GFont s_font_pace;
 static GFont s_font_dist;
 
 static UiModel s_model;
-static char s_clock_buf[8];
+static char s_clock_buf[12];
 static char s_pace_buf[8];
 static char s_dist_buf[8];
 static char s_dur_buf[12];

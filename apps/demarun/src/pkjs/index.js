@@ -101,6 +101,7 @@ Pebble.addEventListener("appmessage", function (e) {
     tracker.pause();
   } else if (cmd === CMD_RESUME) {
     tracking = true;
+    startWatch();
   } else if (cmd === CMD_END) {
     tracking = false;
     stopWatch();
