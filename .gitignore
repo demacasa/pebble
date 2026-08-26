@@ -4,3 +4,4 @@ apps/*/build/
 result
 result-*
 node_modules/
+.lock-waf_*

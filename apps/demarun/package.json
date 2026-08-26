@@ -1,0 +1,33 @@
+{
+  "name": "demarun",
+  "author": "demacasa",
+  "version": "0.1.0",
+  "private": true,
+  "keywords": [
+    "pebble-app"
+  ],
+  "dependencies": {},
+  "pebble": {
+    "displayName": "DemaRun",
+    "uuid": "21e65204-4f63-45c7-b4e1-0f4a93e02452",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "basalt",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": [
+      "DISTANCE_M",
+      "PACE_SPM",
+      "GPS_STATUS",
+      "CMD"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}
