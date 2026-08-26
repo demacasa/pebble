@@ -32,6 +32,14 @@
       formatter = treefmtEval.config.build.wrapper;
       checks = {
         formatting = treefmtEval.config.build.check self;
+        demarun-c-tests = pkgs.runCommand "demarun-c-tests" {} ''
+          cd ${self}/apps/demarun
+          mkdir -p $TMPDIR/bin
+          ${pkgs.stdenv.cc}/bin/cc -Wall -Wextra -Werror -o $TMPDIR/bin/test_fmt \
+            test/test_fmt.c src/c/fmt.c
+          $TMPDIR/bin/test_fmt
+          touch $out
+        '';
       };
     });
 }
