@@ -38,6 +38,9 @@
           ${pkgs.stdenv.cc}/bin/cc -Wall -Wextra -Werror -o $TMPDIR/bin/test_fmt \
             test/test_fmt.c src/c/fmt.c
           $TMPDIR/bin/test_fmt
+          ${pkgs.stdenv.cc}/bin/cc -Wall -Wextra -Werror -o $TMPDIR/bin/test_run_state \
+            test/test_run_state.c src/c/run_state.c
+          $TMPDIR/bin/test_run_state
           touch $out
         '';
       };
