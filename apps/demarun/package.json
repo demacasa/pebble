@@ -27,7 +27,20 @@
       "CMD"
     ],
     "resources": {
-      "media": []
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_OSWALD_66",
+          "file": "fonts/Oswald-Medium.ttf",
+          "characterRegex": "[0-9:.\\-]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_OSWALD_50",
+          "file": "fonts/Oswald-Medium.ttf",
+          "characterRegex": "[0-9:.\\-]"
+        }
+      ]
     }
   }
 }
