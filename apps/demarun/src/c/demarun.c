@@ -56,7 +56,16 @@ static void prv_exit_hint_expired(void *ctx) {
   prv_refresh();
 }
 
+static void prv_clear_exit_hint(void) {
+  if (s_exit_hint_timer) {
+    app_timer_cancel(s_exit_hint_timer);
+    s_exit_hint_timer = NULL;
+  }
+  s_model.show_exit_hint = false;
+}
+
 static void prv_select_click(ClickRecognizerRef recognizer, void *context) {
+  prv_clear_exit_hint();
   RunState before = s_machine.state;
   if (run_machine_select(&s_machine)) {
     if (before == RUN_STATE_IDLE) {
@@ -74,6 +83,7 @@ static void prv_select_click(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void prv_select_long_click(ClickRecognizerRef recognizer, void *context) {
+  prv_clear_exit_hint();
   if (run_machine_long_select(&s_machine)) {
     comm_send_cmd(CMD_END);
     s_model.distance_m = 0;
@@ -85,6 +95,7 @@ static void prv_select_long_click(ClickRecognizerRef recognizer, void *context) 
 
 static void prv_back_click(ClickRecognizerRef recognizer, void *context) {
   if (s_machine.state == RUN_STATE_IDLE || s_model.show_exit_hint) {
+    prv_clear_exit_hint();
     comm_send_cmd(CMD_END);
     window_stack_pop_all(true);
     return;
