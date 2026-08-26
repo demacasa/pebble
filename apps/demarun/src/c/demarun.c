@@ -46,10 +46,65 @@ static void prv_window_unload(Window *window) {
   ui_destroy();
 }
 
+#define EXIT_HINT_MS 3000
+
+static AppTimer *s_exit_hint_timer;
+
+static void prv_exit_hint_expired(void *ctx) {
+  s_exit_hint_timer = NULL;
+  s_model.show_exit_hint = false;
+  prv_refresh();
+}
+
+static void prv_select_click(ClickRecognizerRef recognizer, void *context) {
+  RunState before = s_machine.state;
+  if (run_machine_select(&s_machine)) {
+    if (before == RUN_STATE_IDLE) {
+      s_model.distance_m = 0;
+      s_model.pace_spm = 0;
+      s_model.gps = GPS_ACQUIRING;
+      comm_send_cmd(CMD_START);
+    } else if (before == RUN_STATE_RUNNING) {
+      comm_send_cmd(CMD_PAUSE);
+    } else {
+      comm_send_cmd(CMD_RESUME);
+    }
+    prv_refresh();
+  }
+}
+
+static void prv_select_long_click(ClickRecognizerRef recognizer, void *context) {
+  if (run_machine_long_select(&s_machine)) {
+    comm_send_cmd(CMD_END);
+    s_model.distance_m = 0;
+    s_model.pace_spm = 0;
+    s_model.gps = GPS_ACQUIRING;
+    prv_refresh();
+  }
+}
+
+static void prv_back_click(ClickRecognizerRef recognizer, void *context) {
+  if (s_machine.state == RUN_STATE_IDLE || s_model.show_exit_hint) {
+    comm_send_cmd(CMD_END);
+    window_stack_pop_all(true);
+    return;
+  }
+  s_model.show_exit_hint = true;
+  prv_refresh();
+  s_exit_hint_timer = app_timer_register(EXIT_HINT_MS, prv_exit_hint_expired, NULL);
+}
+
+static void prv_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 700, prv_select_long_click, NULL);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click);
+}
+
 int main(void) {
   run_machine_init(&s_machine);
   s_model = (UiModel){.bt_connected = true, .gps = GPS_ACQUIRING};
   s_window = window_create();
+  window_set_click_config_provider(s_window, prv_click_config);
   window_set_window_handlers(
       s_window, (WindowHandlers){.load = prv_window_load, .unload = prv_window_unload});
   window_stack_push(s_window, true);
