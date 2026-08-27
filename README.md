@@ -24,6 +24,13 @@ Tests and formatting: `nix flake check` / `nix fmt`.
 
 ## Installing on a watch
 
+Easiest: download `demarun-<version>.pbw` from the
+[latest release](https://github.com/demacasa/pebble/releases/latest) on your
+phone and open it — the Core Devices app installs it to the watch. Releases
+are built by CI from `v*` tags.
+
+Developer installs:
+
 1. `pebble login` (Rebble account), enable **Dev Connect** in the Core
    Devices phone app, then `pebble install --cloudpebble`.
 2. Same LAN alternative: `pebble install --phone <phone-ip>`.
