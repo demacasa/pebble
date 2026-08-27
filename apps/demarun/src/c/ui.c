@@ -6,11 +6,10 @@
 #define DIM_GRAY COLOR_FALLBACK(GColorDarkGray, GColorWhite)
 
 static Window *s_window;
-static Layer *s_status_layer;   // clock + BT + GPS glyphs (custom draw)
-static TextLayer *s_pace_label; // "PACE /MI"
+static Layer *s_status_layer; // clock + BT + GPS glyphs (custom draw)
 static TextLayer *s_pace_value;
-static TextLayer *s_hint; // idle prompt / GPS lost tag / exit hint
-static TextLayer *s_paused_banner;
+static TextLayer *s_pace_unit; // "/MI"
+static TextLayer *s_band;      // one strip: PAUSED banner / idle prompt / GPS lost / exit hint
 static Layer *s_divider;
 static TextLayer *s_dist_value;
 static TextLayer *s_dist_unit;
@@ -94,35 +93,36 @@ void ui_create(Window *window) {
   layer_set_update_proc(s_status_layer, prv_status_update_proc);
   layer_add_child(root, s_status_layer);
 
-  s_paused_banner =
-      prv_make_text(root, GRect(0, 26, w, 26), fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                    GColorBlack, GTextAlignmentCenter);
-  text_layer_set_background_color(s_paused_banner, GColorWhite);
-  text_layer_set_text(s_paused_banner, "PAUSED");
-
-  s_pace_label = prv_make_text(root, GRect(0, 54, w, 16), fonts_get_system_font(FONT_KEY_GOTHIC_14),
-                               GRAY, GTextAlignmentCenter);
-  text_layer_set_text(s_pace_label, "PACE /MI");
-
   s_pace_value =
-      prv_make_text(root, GRect(0, 66, w, 74), s_font_pace, GColorWhite, GTextAlignmentCenter);
+      prv_make_text(root, GRect(0, 28, w - 52, 74), s_font_pace, GColorWhite, GTextAlignmentRight);
+  s_pace_unit = prv_make_text(root, GRect(w - 46, 68, 44, 22),
+                              fonts_get_system_font(FONT_KEY_GOTHIC_18), GRAY, GTextAlignmentLeft);
+  text_layer_set_text(s_pace_unit, "/MI");
 
-  s_hint = prv_make_text(root, GRect(0, 140, w, 16), fonts_get_system_font(FONT_KEY_GOTHIC_14),
+  s_band = prv_make_text(root, GRect(0, h - 118, w, 24), fonts_get_system_font(FONT_KEY_GOTHIC_14),
                          GColorWhite, GTextAlignmentCenter);
 
-  s_divider = layer_create(GRect(8, h - 70, w - 16, 1));
+  s_divider = layer_create(GRect(8, h - 90, w - 16, 1));
   layer_set_update_proc(s_divider, prv_divider_update_proc);
   layer_add_child(root, s_divider);
 
-  s_dist_value = prv_make_text(root, GRect(0, h - 68, w - 52, 54), s_font_dist, GColorWhite,
+  s_dist_value = prv_make_text(root, GRect(0, h - 86, w - 52, 54), s_font_dist, GColorWhite,
                                GTextAlignmentRight);
-  s_dist_unit = prv_make_text(root, GRect(w - 46, h - 40, 40, 24),
+  s_dist_unit = prv_make_text(root, GRect(w - 46, h - 58, 40, 24),
                               fonts_get_system_font(FONT_KEY_GOTHIC_18), GRAY, GTextAlignmentLeft);
   text_layer_set_text(s_dist_unit, "MI");
 
   s_duration =
-      prv_make_text(root, GRect(0, h - 22, w, 20), fonts_get_system_font(FONT_KEY_GOTHIC_18),
+      prv_make_text(root, GRect(0, h - 30, w, 28), fonts_get_system_font(FONT_KEY_GOTHIC_24),
                     GColorWhite, GTextAlignmentCenter);
+}
+
+// The band is one reusable strip: inverted PAUSED banner, or a plain hint line.
+static void prv_set_band(const char *text, GColor bg, GColor fg, const char *font_key) {
+  text_layer_set_background_color(s_band, bg);
+  text_layer_set_text_color(s_band, fg);
+  text_layer_set_font(s_band, fonts_get_system_font(font_key));
+  text_layer_set_text(s_band, text);
 }
 
 void ui_update(const UiModel *model) {
@@ -144,19 +144,17 @@ void ui_update(const UiModel *model) {
   text_layer_set_text(s_duration, s_dur_buf);
   text_layer_set_text_color(s_duration, value_color);
 
-  layer_set_hidden(text_layer_get_layer(s_paused_banner), model->state != RUN_STATE_PAUSED);
-
   if (model->show_exit_hint) {
-    text_layer_set_text_color(s_hint, GColorWhite);
-    text_layer_set_text(s_hint, "PRESS BACK AGAIN TO EXIT");
+    prv_set_band("PRESS BACK AGAIN TO EXIT", GColorClear, GColorWhite, FONT_KEY_GOTHIC_14);
+  } else if (model->state == RUN_STATE_PAUSED) {
+    prv_set_band("PAUSED", GColorWhite, GColorBlack, FONT_KEY_GOTHIC_18_BOLD);
   } else if (model->state == RUN_STATE_IDLE) {
-    text_layer_set_text_color(s_hint, GColorWhite);
-    text_layer_set_text(s_hint, "PRESS SELECT TO START");
+    prv_set_band("PRESS SELECT TO START", GColorClear, GColorWhite, FONT_KEY_GOTHIC_14);
   } else if (model->state == RUN_STATE_RUNNING && model->gps == GPS_LOST) {
-    text_layer_set_text_color(s_hint, COLOR_FALLBACK(GColorYellow, GColorWhite));
-    text_layer_set_text(s_hint, "GPS SIGNAL LOST");
+    prv_set_band("GPS SIGNAL LOST", GColorClear, COLOR_FALLBACK(GColorYellow, GColorWhite),
+                 FONT_KEY_GOTHIC_14);
   } else {
-    text_layer_set_text(s_hint, "");
+    prv_set_band("", GColorClear, GColorWhite, FONT_KEY_GOTHIC_14);
   }
 
   layer_mark_dirty(s_status_layer);
@@ -165,10 +163,9 @@ void ui_update(const UiModel *model) {
 void ui_destroy(void) {
   layer_destroy(s_status_layer);
   layer_destroy(s_divider);
-  text_layer_destroy(s_pace_label);
   text_layer_destroy(s_pace_value);
-  text_layer_destroy(s_hint);
-  text_layer_destroy(s_paused_banner);
+  text_layer_destroy(s_pace_unit);
+  text_layer_destroy(s_band);
   text_layer_destroy(s_dist_value);
   text_layer_destroy(s_dist_unit);
   text_layer_destroy(s_duration);
